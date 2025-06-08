@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrixhelicopter - Meditative Flight Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+            overflow: hidden;
+        }
+        
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #ui-overlay {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        .matrix-text {
+            text-shadow: 0 0 10px #00ff00;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="matrix-text">
+        <h1>MATRIXHELICOPTER</h1>
+        <p>Initializing Reality Simulation...</p>
+        <div id="loading-progress">0%</div>
+    </div>
+    
+    <div id="canvas-container"></div>
+    
+    <div id="ui-overlay">
+        <div id="flight-info" style="display: none;">
+            <div>Altitude: <span id="altitude">0</span>m</div>
+            <div>Speed: <span id="speed">0</span> km/h</div>
+            <div>Reality Layer: <span id="reality-layer">Simulation</span></div>
+            <div id="time-info" style="margin-top: 10px; font-size: 12px; opacity: 0.8;"></div>
+            <div id="weather-info" style="font-size: 12px; opacity: 0.8;"></div>
+            <div id="theme-info" style="font-size: 12px; opacity: 0.8;"></div>
+        </div>
+    </div>
+    
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

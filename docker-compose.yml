@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  matrixhelicopter-test:
+    build: .
+    container_name: matrixhelicopter-tests
+    volumes:
+      - ./logs:/app/logs
+      - ./test-results:/app/test-results
+      - ./coverage:/app/coverage
+    environment:
+      - NODE_ENV=test
+      - CI=true
+      - JEST_JUNIT_OUTPUT_DIR=/app/test-results
+      - JEST_JUNIT_OUTPUT_NAME=test-results.xml
+    command: npm run test:docker
+    
+  # Additional service for development testing with file watching
+  matrixhelicopter-dev:
+    build: .
+    container_name: matrixhelicopter-dev-tests
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run test:watch
+    profiles:
+      - dev
+
+networks:
+  default:
+    name: matrixhelicopter-network

@@ -1,3 +1,5 @@
+import { MeditationUI } from './MeditationUI.js';
+
 export class UIManager {
     constructor() {
         this.altitudeElement = document.getElementById('altitude');
@@ -7,12 +9,18 @@ export class UIManager {
         this.weatherElement = null;
         this.themeElement = null;
         this.achievementElement = null;
+        this.helicopterInfoElement = null;
+        this.advancedStatusElement = null;
         
         this.currentRealityLayer = 'Simulation';
         this.lastPhilosophicalZone = null;
         
+        // Initialize meditation UI
+        this.meditationUI = new MeditationUI();
+        
         this.setupKeyboardHelp();
         this.setupAdditionalUI();
+        this.setupEnhancedHUD();
     }
     
     update(flightData) {
@@ -24,8 +32,17 @@ export class UIManager {
             this.speedElement.textContent = flightData.speed;
         }
         
+        // Update helicopter information
+        this.updateHelicopterInfo(flightData);
+        
+        // Update advanced flight status
+        this.updateAdvancedStatus(flightData);
+        
         // Check if near philosophical zones
-        this.checkPhilosophicalProximity(flightData.position);
+        const currentZone = this.checkPhilosophicalProximity(flightData.position);
+        
+        // Update meditation UI (will get time of day from main game loop)
+        this.meditationUI.update(flightData, currentZone, this.currentTimeOfDay);
         
         // Update reality layer display
         if (this.realityLayerElement) {
@@ -64,6 +81,8 @@ export class UIManager {
             this.lastPhilosophicalZone = null;
             this.hideZoneMessage();
         }
+        
+        return nearestZone;
     }
     
     showZoneMessage(zoneName) {
@@ -141,9 +160,15 @@ export class UIManager {
             A/D: Roll<br>
             Q/E: Yaw<br>
             <br>
+            <strong>HELICOPTERS</strong><br>
+            1-5: Switch Types<br>
+            F: Autorotation<br>
+            T: Weather Effects<br>
+            <br>
             <strong>SYSTEM</strong><br>
             R: Toggle Reality Layer<br>
             M: Mute/Unmute Audio<br>
+            ENTER: Meditation Mode<br>
             <br>
             <em>Explore the philosophical zones</em>
         `;
@@ -173,6 +198,9 @@ export class UIManager {
         if (this.timeElement && dayNightCycle) {
             const phaseInfo = dayNightCycle.getCurrentPhaseInfo();
             this.timeElement.textContent = `${phaseInfo.timeString} - ${phaseInfo.name}`;
+            
+            // Store current time of day for meditation UI
+            this.currentTimeOfDay = phaseInfo.phase || 'day';
         }
     }
     
@@ -198,5 +226,146 @@ export class UIManager {
         if (this.realityLayerElement) {
             this.realityLayerElement.textContent = this.currentRealityLayer;
         }
+    }
+    
+    setupEnhancedHUD() {
+        // Create helicopter info panel
+        const helicopterInfoDiv = document.createElement('div');
+        helicopterInfoDiv.id = 'helicopter-info';
+        helicopterInfoDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            padding: 15px;
+            border: 1px solid #003300;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            z-index: 100;
+            min-width: 200px;
+        `;
+        
+        helicopterInfoDiv.innerHTML = `
+            <div style="margin-bottom: 10px; border-bottom: 1px solid #003300; padding-bottom: 5px;">
+                <strong>HELICOPTER STATUS</strong>
+            </div>
+            <div>Type: <span id="heli-type">Matrix Scout</span></div>
+            <div>Mass: <span id="heli-mass">800</span> kg</div>
+            <div>Max Lift: <span id="heli-lift">12000</span> N</div>
+            <div style="margin-top: 10px;">
+                <div>Collective: <span id="control-collective">0.00</span></div>
+                <div>Pitch: <span id="control-pitch">0.00</span></div>
+                <div>Roll: <span id="control-roll">0.00</span></div>
+                <div>Yaw: <span id="control-yaw">0.00</span></div>
+            </div>
+        `;
+        
+        document.body.appendChild(helicopterInfoDiv);
+        this.helicopterInfoElement = helicopterInfoDiv;
+        
+        // Create advanced status panel
+        const advancedStatusDiv = document.createElement('div');
+        advancedStatusDiv.id = 'advanced-status';
+        advancedStatusDiv.style.cssText = `
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            padding: 15px;
+            border: 1px solid #003300;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            z-index: 100;
+            min-width: 250px;
+        `;
+        
+        advancedStatusDiv.innerHTML = `
+            <div style="margin-bottom: 10px; border-bottom: 1px solid #003300; padding-bottom: 5px;">
+                <strong>ADVANCED FLIGHT STATUS</strong>
+            </div>
+            <div class="status-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                <div>Ground Effect: <span id="ground-effect">No</span></div>
+                <div>Vortex Ring: <span id="vortex-ring">No</span></div>
+                <div>Autorotation: <span id="autorotation">No</span></div>
+                <div>Ground Contact: <span id="ground-contact">No</span></div>
+                <div>Torque: <span id="torque">0.00</span></div>
+                <div>Wind Speed: <span id="wind-speed">0.0</span> m/s</div>
+            </div>
+        `;
+        
+        document.body.appendChild(advancedStatusDiv);
+        this.advancedStatusElement = advancedStatusDiv;
+    }
+    
+    updateHelicopterInfo(flightData) {
+        if (!flightData.helicopter || !this.helicopterInfoElement) return;
+        
+        const typeElement = document.getElementById('heli-type');
+        const massElement = document.getElementById('heli-mass');
+        const liftElement = document.getElementById('heli-lift');
+        
+        if (typeElement) typeElement.textContent = flightData.helicopter.type;
+        
+        // Update controls display
+        if (flightData.controls) {
+            const collectiveElement = document.getElementById('control-collective');
+            const pitchElement = document.getElementById('control-pitch');
+            const rollElement = document.getElementById('control-roll');
+            const yawElement = document.getElementById('control-yaw');
+            
+            if (collectiveElement) collectiveElement.textContent = flightData.controls.collective;
+            if (pitchElement) pitchElement.textContent = flightData.controls.cyclicPitch;
+            if (rollElement) rollElement.textContent = flightData.controls.cyclicRoll;
+            if (yawElement) yawElement.textContent = flightData.controls.pedal;
+        }
+    }
+    
+    updateAdvancedStatus(flightData) {
+        if (!flightData.advancedStatus || !this.advancedStatusElement) return;
+        
+        const status = flightData.advancedStatus;
+        
+        const groundEffectElement = document.getElementById('ground-effect');
+        const vortexRingElement = document.getElementById('vortex-ring');
+        const autorotationElement = document.getElementById('autorotation');
+        const groundContactElement = document.getElementById('ground-contact');
+        const torqueElement = document.getElementById('torque');
+        const windSpeedElement = document.getElementById('wind-speed');
+        
+        if (groundEffectElement) {
+            groundEffectElement.textContent = status.groundEffect ? 'Yes' : 'No';
+            groundEffectElement.style.color = status.groundEffect ? '#ffaa00' : '#00ff00';
+        }
+        
+        if (vortexRingElement) {
+            vortexRingElement.textContent = status.vortexRingState ? 'DANGER' : 'No';
+            vortexRingElement.style.color = status.vortexRingState ? '#ff4400' : '#00ff00';
+        }
+        
+        if (autorotationElement) {
+            autorotationElement.textContent = status.autorotation ? 'ACTIVE' : 'No';
+            autorotationElement.style.color = status.autorotation ? '#ff8800' : '#00ff00';
+        }
+        
+        if (groundContactElement) {
+            groundContactElement.textContent = status.groundContact ? 'Yes' : 'No';
+            groundContactElement.style.color = status.groundContact ? '#ffaa00' : '#00ff00';
+        }
+        
+        if (torqueElement) torqueElement.textContent = status.torque;
+        if (windSpeedElement) windSpeedElement.textContent = status.windSpeed;
+    }
+    
+    // Meditation UI delegation methods
+    toggleMeditationMode() {
+        this.meditationUI.toggleMeditationMode();
+    }
+    
+    isInMeditationMode() {
+        return this.meditationUI.isInMeditationMode();
     }
 }

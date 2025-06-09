@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { AdvancedHelicopterPhysics } from './AdvancedHelicopterPhysics.js';
+import { HelicopterTypeManager } from './HelicopterTypes.js';
 
 export class HelicopterController {
     constructor(scene, camera) {
@@ -17,53 +19,38 @@ export class HelicopterController {
         this.cyclicRoll = 0; // Left/right tilt (-1 to 1)
         this.pedal = 0; // Tail rotor yaw (-1 to 1)
         
-        // Physics constants
+        // Helicopter type management
+        this.typeManager = new HelicopterTypeManager();
+        this.advancedPhysics = new AdvancedHelicopterPhysics(this);
+        
+        // Physics constants (will be overridden by helicopter type)
         this.gravity = -9.81;
-        this.mass = 1000; // kg
-        this.maxLift = 15000; // N
+        this.mass = 800; // kg (Matrix Scout default)
+        this.maxLift = 12000; // N (Matrix Scout default)
         this.drag = 0.98;
-        this.responsiveness = 2.0;
+        this.responsiveness = 2.5; // Matrix Scout default
+        
+        // Apply initial helicopter type
+        this.applyHelicopterType();
         
         this.createHelicopter();
         this.setupCamera();
     }
     
     createHelicopter() {
-        this.helicopter = new THREE.Group();
+        // Use type manager to create helicopter mesh
+        const helicopterMesh = this.typeManager.createHelicopterMesh(this.scene);
+        this.helicopter = helicopterMesh.group;
+        this.fuselage = helicopterMesh.fuselage;
+        this.mainRotor = helicopterMesh.rotor;
         
-        // Main body (fuselage)
-        const fuselageGeometry = new THREE.CapsuleGeometry(0.8, 4, 8, 16);
-        const fuselageMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0x003300,
-            transparent: true,
-            opacity: 0.9,
-            emissive: 0x001100
-        });
-        this.fuselage = new THREE.Mesh(fuselageGeometry, fuselageMaterial);
-        this.fuselage.rotation.z = Math.PI / 2;
-        this.helicopter.add(this.fuselage);
-        
-        // Main rotor
-        const rotorBladeGeometry = new THREE.BoxGeometry(8, 0.1, 0.3);
+        // Add tail rotor (not type-specific yet)
         const rotorMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0x004400,
+            color: this.typeManager.currentType.visual.rotorColor,
             transparent: true,
             opacity: 0.7 
         });
         
-        this.mainRotor = new THREE.Group();
-        this.mainRotor.position.y = 1.5;
-        
-        // Create 4 rotor blades
-        for (let i = 0; i < 4; i++) {
-            const blade = new THREE.Mesh(rotorBladeGeometry, rotorMaterial);
-            blade.rotation.z = (i * Math.PI) / 2;
-            this.mainRotor.add(blade);
-        }
-        
-        this.helicopter.add(this.mainRotor);
-        
-        // Tail rotor
         const tailRotorGeometry = new THREE.BoxGeometry(1.5, 0.05, 0.2);
         this.tailRotor = new THREE.Group();
         this.tailRotor.position.set(-3, 0.5, 0);
@@ -78,22 +65,29 @@ export class HelicopterController {
         
         // Landing skids
         const skidGeometry = new THREE.BoxGeometry(1, 0.1, 4);
-        const skidMaterial = new THREE.MeshPhongMaterial({ color: 0x002200 });
+        const skidMaterial = new THREE.MeshPhongMaterial({ 
+            color: this.typeManager.currentType.visual.fuselageColor 
+        });
         
+        const scale = this.typeManager.currentType.specs.rotorRadius / 4.0;
         const leftSkid = new THREE.Mesh(skidGeometry, skidMaterial);
-        leftSkid.position.set(0.8, -0.8, 0);
+        leftSkid.position.set(0.8 * scale, -0.8 * scale, 0);
         this.helicopter.add(leftSkid);
         
         const rightSkid = new THREE.Mesh(skidGeometry, skidMaterial);
-        rightSkid.position.set(-0.8, -0.8, 0);
+        rightSkid.position.set(-0.8 * scale, -0.8 * scale, 0);
         this.helicopter.add(rightSkid);
         
-        // Matrix-style glow effect
-        const glowGeometry = new THREE.SphereGeometry(5, 16, 8);
+        // Matrix-style glow effect with type-specific intensity
+        const glowGeometry = new THREE.SphereGeometry(
+            this.typeManager.currentType.specs.rotorRadius * 1.2, 
+            16, 
+            8
+        );
         const glowMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ff00,
+            color: this.typeManager.currentType.visual.fuselageColor,
             transparent: true,
-            opacity: 0.1,
+            opacity: this.typeManager.currentType.visual.glowIntensity * 0.1,
             side: THREE.BackSide
         });
         this.glow = new THREE.Mesh(glowGeometry, glowMaterial);
@@ -101,9 +95,13 @@ export class HelicopterController {
         
         this.scene.add(this.helicopter);
         
-        // Add lighting
-        const helicopterLight = new THREE.PointLight(0x00ff00, 1, 100);
-        helicopterLight.position.set(0, 2, 0);
+        // Add lighting with type-specific color
+        const helicopterLight = new THREE.PointLight(
+            this.typeManager.currentType.visual.fuselageColor, 
+            this.typeManager.currentType.visual.glowIntensity, 
+            100
+        );
+        helicopterLight.position.set(0, 2 * scale, 0);
         this.helicopter.add(helicopterLight);
         
         this.rotorSpeed = 0;
@@ -113,6 +111,34 @@ export class HelicopterController {
     setupCamera() {
         this.cameraOffset = new THREE.Vector3(0, 5, 15);
         this.cameraTarget = new THREE.Vector3(0, 0, 0);
+    }
+    
+    applyHelicopterType() {
+        this.typeManager.applyTypeModifiers(this.advancedPhysics);
+        const specs = this.typeManager.getCurrentSpecs();
+        const handling = this.typeManager.getCurrentHandling();
+        
+        // Update physics parameters
+        this.mass = specs.mass;
+        this.maxLift = specs.maxLift;
+        this.responsiveness = handling.responsiveness;
+    }
+    
+    changeHelicopterType(typeId) {
+        if (this.typeManager.selectHelicopter(typeId)) {
+            // Remove old helicopter
+            this.scene.remove(this.helicopter);
+            
+            // Apply new type settings
+            this.applyHelicopterType();
+            
+            // Create new helicopter visual
+            this.createHelicopter();
+            
+            console.log(`🚁 Switched to ${this.typeManager.currentType.name}`);
+            return true;
+        }
+        return false;
     }
     
     update(deltaTime, controls) {
@@ -163,16 +189,15 @@ export class HelicopterController {
     }
     
     updatePhysics(deltaTime) {
-        // Main rotor forces
-        const lift = this.collective * this.maxLift;
-        const liftForce = new THREE.Vector3(0, lift / this.mass, 0);
+        // Use advanced physics for realistic flight dynamics
+        this.advancedPhysics.update(deltaTime);
         
-        // Gravity
-        const gravityForce = new THREE.Vector3(0, this.gravity, 0);
+        // Gravity is now handled by advanced physics, remove duplicate
         
-        // Cyclic forces (simplified)
-        const forwardForce = -this.cyclicPitch * 5;
-        const sidewardForce = this.cyclicRoll * 5;
+        // Cyclic forces (enhanced by helicopter type)
+        const handling = this.typeManager.getCurrentHandling();
+        const forwardForce = -this.cyclicPitch * 5 * handling.agility;
+        const sidewardForce = this.cyclicRoll * 5 * handling.agility;
         
         // Apply forces in helicopter's local coordinate system
         const helicopterForward = new THREE.Vector3(0, 0, 1);
@@ -181,35 +206,37 @@ export class HelicopterController {
         const helicopterRight = new THREE.Vector3(1, 0, 0);
         helicopterRight.applyEuler(this.rotation);
         
-        // Update velocity
-        this.velocity.add(liftForce.multiplyScalar(deltaTime));
-        this.velocity.add(gravityForce.multiplyScalar(deltaTime));
         this.velocity.add(helicopterForward.multiplyScalar(forwardForce * deltaTime));
         this.velocity.add(helicopterRight.multiplyScalar(sidewardForce * deltaTime));
         
-        // Apply drag
-        this.velocity.multiplyScalar(this.drag);
+        // Apply drag with type-specific efficiency
+        this.velocity.multiplyScalar(this.drag * handling.efficiency);
         
         // Update position
         this.position.add(this.velocity.clone().multiplyScalar(deltaTime));
         
-        // Angular velocity from pedal input
+        // Enhanced angular velocity with stability
         this.angularVelocity.y = this.pedal * 2;
         
-        // Auto-stabilization
-        this.angularVelocity.x = THREE.MathUtils.lerp(this.angularVelocity.x, -this.cyclicPitch * 0.3, deltaTime * 2);
-        this.angularVelocity.z = THREE.MathUtils.lerp(this.angularVelocity.z, this.cyclicRoll * 0.3, deltaTime * 2);
+        // Type-specific stabilization
+        const stabilizationRate = deltaTime * handling.stability * 2;
+        this.angularVelocity.x = THREE.MathUtils.lerp(
+            this.angularVelocity.x, 
+            -this.cyclicPitch * 0.3, 
+            stabilizationRate
+        );
+        this.angularVelocity.z = THREE.MathUtils.lerp(
+            this.angularVelocity.z, 
+            this.cyclicRoll * 0.3, 
+            stabilizationRate
+        );
         
         // Update rotation
         this.rotation.x += this.angularVelocity.x * deltaTime;
         this.rotation.y += this.angularVelocity.y * deltaTime;
         this.rotation.z += this.angularVelocity.z * deltaTime;
         
-        // Ground collision (simplified)
-        if (this.position.y < 2) {
-            this.position.y = 2;
-            this.velocity.y = Math.max(this.velocity.y, 0);
-        }
+        // Advanced ground interaction is handled by AdvancedHelicopterPhysics
         
         // Update helicopter position and rotation
         this.helicopter.position.copy(this.position);
@@ -246,11 +273,48 @@ export class HelicopterController {
     }
     
     getFlightData() {
+        const advancedStatus = this.advancedPhysics.getFlightStatus();
         return {
             altitude: Math.round(this.position.y),
             speed: Math.round(this.velocity.length() * 3.6), // m/s to km/h
             collective: this.collective,
-            position: this.position.clone()
+            position: this.position.clone(),
+            helicopter: {
+                type: this.typeManager.currentType.name,
+                id: this.typeManager.currentType.id
+            },
+            advancedStatus: advancedStatus,
+            controls: {
+                collective: this.collective.toFixed(2),
+                cyclicPitch: this.cyclicPitch.toFixed(2),
+                cyclicRoll: this.cyclicRoll.toFixed(2),
+                pedal: this.pedal.toFixed(2)
+            }
+        };
+    }
+    
+    // Weather control methods
+    setWind(direction, speed, turbulence = 0) {
+        this.advancedPhysics.setWind(direction, speed, turbulence);
+    }
+    
+    engageAutorotation() {
+        this.advancedPhysics.engageAutorotation();
+    }
+    
+    // Type management methods
+    getAvailableHelicopterTypes() {
+        return this.typeManager.getSelectionData();
+    }
+    
+    unlockHelicopterType(typeId) {
+        return this.typeManager.unlockType(typeId);
+    }
+    
+    getCurrentHelicopterType() {
+        return {
+            ...this.typeManager.currentType,
+            unlockedTypes: this.typeManager.unlockedTypes
         };
     }
 }

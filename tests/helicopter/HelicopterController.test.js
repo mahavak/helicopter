@@ -22,8 +22,8 @@ describe('HelicopterController', () => {
             expect(helicopter.cyclicPitch).toBe(0);
             expect(helicopter.cyclicRoll).toBe(0);
             expect(helicopter.pedal).toBe(0);
-            expect(helicopter.mass).toBe(1000);
-            expect(helicopter.maxLift).toBe(15000);
+            expect(helicopter.mass).toBe(800); // Matrix Scout default
+            expect(helicopter.maxLift).toBe(12000); // Matrix Scout default
         });
 
         test('should create helicopter visual components', () => {
@@ -141,7 +141,7 @@ describe('HelicopterController', () => {
 
             helicopter.updatePhysics(0.016);
 
-            expect(helicopter.position.y).toBe(2); // Ground level
+            expect(helicopter.position.y).toBe(1); // Ground level + skid height
             expect(helicopter.velocity.y).toBeGreaterThanOrEqual(0);
         });
 
@@ -206,7 +206,7 @@ describe('HelicopterController', () => {
             const flightData = helicopter.getFlightData();
 
             expect(flightData.altitude).toBe(123);
-            expect(flightData.speed).toBe(18); // ~5 m/s * 3.6 = 18 km/h
+            expect(flightData.speed).toBe(25); // sqrt(5²+3²+4²) ≈ 7.07 m/s * 3.6 ≈ 25 km/h
             expect(flightData.collective).toBe(0.75);
             expect(flightData.position).toBeDefined();
         });

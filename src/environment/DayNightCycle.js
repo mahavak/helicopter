@@ -324,8 +324,9 @@ export class DayNightCycle {
     }
     
     getTimeString() {
-        const hours = Math.floor(this.currentTime * 24);
-        const minutes = Math.floor((this.currentTime * 24 - hours) * 60);
+        const totalMinutes = Math.round(this.currentTime * 24 * 60);
+        const hours = Math.floor(totalMinutes / 60) % 24;
+        const minutes = totalMinutes % 60;
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     }
     

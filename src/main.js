@@ -9,6 +9,7 @@ import { DayNightCycle } from './environment/DayNightCycle.js';
 import { WeatherSystem } from './environment/WeatherSystem.js';
 import { HelicopterCustomization } from './helicopter/HelicopterCustomization.js';
 import { AchievementSystem } from './systems/AchievementSystem.js';
+import { ProgressVisualization } from './ui/ProgressVisualization.js';
 
 class MatrixHelicopterGame {
     constructor() {
@@ -25,6 +26,7 @@ class MatrixHelicopterGame {
         this.weatherSystem = null;
         this.customization = null;
         this.achievementSystem = null;
+        this.progressVisualization = null;
         
         this.clock = new THREE.Clock();
         this.isLoaded = false;
@@ -66,6 +68,9 @@ class MatrixHelicopterGame {
             this.audioManager, 
             this.customization
         );
+        
+        // Initialize progress visualization
+        this.progressVisualization = new ProgressVisualization(this.scene, this.camera);
         
         // Setup controls
         this.setupControls();
@@ -147,6 +152,40 @@ class MatrixHelicopterGame {
                         this.audioManager.setMasterVolume(
                             this.audioManager.masterVolume > 0 ? 0 : 0.7
                         );
+                    }
+                    break;
+                case 'Digit1':
+                    // Switch to Matrix Scout
+                    if (this.helicopter) this.helicopter.changeHelicopterType('matrix_scout');
+                    break;
+                case 'Digit2':
+                    // Switch to Digital Transport
+                    if (this.helicopter) this.helicopter.changeHelicopterType('digital_transport');
+                    break;
+                case 'Digit3':
+                    // Switch to Code Lifter
+                    if (this.helicopter) this.helicopter.changeHelicopterType('code_lifter');
+                    break;
+                case 'Digit4':
+                    // Switch to Quantum Paradox
+                    if (this.helicopter) this.helicopter.changeHelicopterType('quantum_paradox');
+                    break;
+                case 'Digit5':
+                    // Switch to Zen Glider
+                    if (this.helicopter) this.helicopter.changeHelicopterType('zen_glider');
+                    break;
+                case 'KeyF':
+                    // Engage autorotation (emergency mode)
+                    if (this.helicopter) this.helicopter.engageAutorotation();
+                    break;
+                case 'KeyT':
+                    // Toggle weather (add some wind for testing)
+                    if (this.helicopter) {
+                        const windSpeed = Math.random() * 10; // 0-10 m/s
+                        const windDirection = Math.random() * Math.PI * 2; // Random direction
+                        const turbulence = Math.random() * 5; // 0-5 turbulence
+                        this.helicopter.setWind(windDirection, windSpeed, turbulence);
+                        console.log(`🌪️ Wind set: ${windSpeed.toFixed(1)} m/s, turbulence: ${turbulence.toFixed(1)}`);
                     }
                     break;
             }
@@ -241,6 +280,15 @@ class MatrixHelicopterGame {
             const flightData = this.helicopter.getFlightData();
             const currentZone = this.zoneManager ? this.zoneManager.activeZone : null;
             this.achievementSystem.update(deltaTime, flightData, currentZone);
+        }
+        
+        // Update progress visualization
+        if (this.progressVisualization && this.helicopter) {
+            const meditationData = {
+                isActive: this.ui ? this.ui.isInMeditationMode() : false,
+                sessionData: this.ui?.meditationUI?.currentSession || null
+            };
+            this.progressVisualization.update(deltaTime, this.helicopter.position, meditationData);
         }
         
         if (this.ui && this.helicopter) {

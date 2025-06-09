@@ -10,7 +10,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:docker": "jest --verbose --coverage --testResultsProcessor=jest-junit --outputFile=/app/logs/test-output.log 2>&1 | tee /app/logs/jest.log",
+    "test:docker": "jest --verbose --coverage --testResultsProcessor=jest-junit",
     "test:ci": "jest --ci --coverage --watchAll=false",
     "docker:build": "docker-compose build",
     "docker:test": "docker-compose up --build matrixhelicopter-test",

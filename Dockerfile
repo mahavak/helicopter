@@ -24,5 +24,5 @@ ENV CI=true
 # Expose port for any potential web server testing
 EXPOSE 3000
 
-# Default command runs all tests with verbose output
-CMD ["npm", "run", "test:docker"]
+# Default command runs comprehensive TestFlight tests
+CMD ["npm", "run", "test:comprehensive"]

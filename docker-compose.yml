@@ -13,7 +13,7 @@ services:
       - CI=true
       - JEST_JUNIT_OUTPUT_DIR=/app/test-results
       - JEST_JUNIT_OUTPUT_NAME=test-results.xml
-    command: npm run test:docker
+    command: npm run test:comprehensive
     
   # Additional service for development testing with file watching
   matrixhelicopter-dev:

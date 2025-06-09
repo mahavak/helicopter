@@ -10,6 +10,7 @@ import { WeatherSystem } from './environment/WeatherSystem.js';
 import { HelicopterCustomization } from './helicopter/HelicopterCustomization.js';
 import { AchievementSystem } from './systems/AchievementSystem.js';
 import { ProgressVisualization } from './ui/ProgressVisualization.js';
+import { TestFlight } from './features/TestFlight.js';
 
 class MatrixHelicopterGame {
     constructor() {
@@ -27,6 +28,7 @@ class MatrixHelicopterGame {
         this.customization = null;
         this.achievementSystem = null;
         this.progressVisualization = null;
+        this.testFlight = null;
         
         this.clock = new THREE.Clock();
         this.isLoaded = false;
@@ -71,6 +73,18 @@ class MatrixHelicopterGame {
         
         // Initialize progress visualization
         this.progressVisualization = new ProgressVisualization(this.scene, this.camera);
+        
+        // Initialize test flight system
+        this.testFlight = new TestFlight(
+            this,
+            this.helicopter,
+            this.helicopter, // controller is part of helicopter
+            this.ui,
+            this.weatherSystem,
+            this.dayNightCycle,
+            this.ui?.meditationUI,
+            this.achievementSystem
+        );
         
         // Setup controls
         this.setupControls();
@@ -289,6 +303,11 @@ class MatrixHelicopterGame {
                 sessionData: this.ui?.meditationUI?.currentSession || null
             };
             this.progressVisualization.update(deltaTime, this.helicopter.position, meditationData);
+        }
+        
+        // Update test flight
+        if (this.testFlight) {
+            this.testFlight.update(deltaTime);
         }
         
         if (this.ui && this.helicopter) {

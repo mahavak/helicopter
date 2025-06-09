@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Helicopter - Test Flight Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+        }
+        
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 20, 0, 0.9);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            text-shadow: 0 0 20px #00ff00;
+            margin-bottom: 30px;
+        }
+        
+        .feature-list {
+            margin: 20px 0;
+        }
+        
+        .feature-category {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(0, 40, 0, 0.7);
+            border-radius: 8px;
+            border-left: 4px solid #00ff00;
+        }
+        
+        .feature-category h3 {
+            color: #88ff88;
+            margin: 0 0 10px 0;
+        }
+        
+        .feature-item {
+            margin: 5px 0;
+            padding-left: 15px;
+        }
+        
+        .start-button {
+            display: block;
+            width: 200px;
+            margin: 30px auto;
+            padding: 15px 30px;
+            background: rgba(0, 60, 0, 0.9);
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .start-button:hover {
+            background: rgba(0, 80, 0, 0.95);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .controls {
+            background: rgba(0, 30, 0, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .controls h3 {
+            color: #88ff88;
+            margin: 0 0 15px 0;
+        }
+        
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            opacity: 0.7;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🚁 Matrix Helicopter Test Flight</h1>
+        
+        <p style="text-align: center; color: #88ff88; font-size: 18px;">
+            Experience the ultimate helicopter meditation simulator with our comprehensive guided tour
+        </p>
+        
+        <div class="feature-list">
+            <div class="feature-category">
+                <h3>🚁 5 Unique Helicopter Types</h3>
+                <div class="feature-item">• Matrix Scout - Light reconnaissance craft</div>
+                <div class="feature-item">• Digital Transport - Stable medium helicopter</div>
+                <div class="feature-item">• Code Lifter - Heavy-duty stability master</div>
+                <div class="feature-item">• Quantum Paradox - Experimental uncertainty craft</div>
+                <div class="feature-item">• Zen Glider - Autorotation specialist</div>
+            </div>
+            
+            <div class="feature-category">
+                <h3>🌫️ Advanced Physics & Weather</h3>
+                <div class="feature-item">• Ground Effect - Enhanced lift near terrain</div>
+                <div class="feature-item">• Vortex Ring State - Dangerous descent condition</div>
+                <div class="feature-item">• Autorotation - Emergency powerless flight</div>
+                <div class="feature-item">• Digital Storm - Rain with lightning effects</div>
+                <div class="feature-item">• Code Snow - Peaceful falling characters</div>
+                <div class="feature-item">• Reality Glitch - Temporal distortions</div>
+            </div>
+            
+            <div class="feature-category">
+                <h3>🧘 Meditation & Mindfulness</h3>
+                <div class="feature-item">• Breathing Guide - Visual circular breathing aid</div>
+                <div class="feature-item">• Progress Visualization - Real-time stability metrics</div>
+                <div class="feature-item">• Mindfulness Prompts - Context-aware philosophy</div>
+                <div class="feature-item">• Zone-Specific Meditation - Different experiences per area</div>
+            </div>
+            
+            <div class="feature-category">
+                <h3>🌍 4 Philosophical Zones</h3>
+                <div class="feature-item">• Cave of Shadows - Reality perception</div>
+                <div class="feature-item">• Garden of Forking Paths - Choice exploration</div>
+                <div class="feature-item">• Observer's Paradox - Consciousness effects</div>
+                <div class="feature-item">• Ship of Theseus - Identity questioning</div>
+            </div>
+            
+            <div class="feature-category">
+                <h3>🏆 Achievement System</h3>
+                <div class="feature-item">• Unlock helicopter themes through insights</div>
+                <div class="feature-item">• Special content and abilities</div>
+                <div class="feature-item">• Progressive philosophical understanding</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <h3>Flight Controls</h3>
+            <div class="control-row">
+                <span>W/S:</span>
+                <span>Collective (Up/Down)</span>
+            </div>
+            <div class="control-row">
+                <span>A/D:</span>
+                <span>Cyclic Roll (Left/Right)</span>
+            </div>
+            <div class="control-row">
+                <span>Q/E:</span>
+                <span>Cyclic Pitch (Forward/Back)</span>
+            </div>
+            <div class="control-row">
+                <span>Shift/Space:</span>
+                <span>Yaw (Turn Left/Right)</span>
+            </div>
+            <div class="control-row">
+                <span>F:</span>
+                <span>Engage Autorotation</span>
+            </div>
+            <div class="control-row">
+                <span>1-5:</span>
+                <span>Switch Helicopter Types</span>
+            </div>
+            <div class="control-row">
+                <span>Enter:</span>
+                <span>Meditation Mode</span>
+            </div>
+            <div class="control-row">
+                <span>R:</span>
+                <span>Toggle Reality Layer</span>
+            </div>
+        </div>
+        
+        <a href="index.html" class="start-button">
+            🚁 Start Test Flight Experience
+        </a>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <p style="color: #88ff88; font-style: italic;">
+                "The test flight will automatically showcase all features with guided narration.<br>
+                Press 'Escape' anytime to take manual control."
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>Matrix Helicopter - Where Physics Meets Philosophy</p>
+            <p>🎯 18-Step Guided Tour | ⏱️ ~15 Minutes | 🧘 Fully Automated</p>
+        </div>
+    </div>
+</body>
+</html>

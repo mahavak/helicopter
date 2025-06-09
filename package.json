@@ -11,7 +11,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:docker": "jest --verbose --coverage --testResultsProcessor=jest-junit",
-    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:ci": "jest --ci --watchAll=false --config=jest.ci.config.js",
     "test:comprehensive": "node tests/TestFlightTestSuite.js",
     "test:performance": "jest --verbose --testPathPattern=performance --maxWorkers=1",
     "test:integration": "jest --verbose --testPathPattern=integration --maxWorkers=2",
